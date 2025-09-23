@@ -1,0 +1,177 @@
+body {
+    background-color: #f8f9fa;
+}
+
+.card {
+    box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.075);
+}
+
+.table-hover tbody tr:hover {
+    background-color: #f5f5f5;
+    cursor: pointer;
+}
+
+.selected-row {
+    background-color: #d4edda !important;
+    font-weight: bold;
+}
+
+.exclusion-item, .inclusion-item {
+    display: inline-block;
+    margin: 2px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.9em;
+}
+
+.exclusion-item {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+.inclusion-item {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.remove-btn {
+    margin-left: 5px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.remove-btn:hover {
+    color: #000;
+}
+
+#coalition-table tbody tr:hover {
+    background-color: #e9ecef;
+}
+
+.coalition-selected {
+    background-color: #b8daff !important;
+}
+
+/* Political Spectrum Styles */
+.spectrum-container {
+    position: relative;
+    width: 100%;
+    height: 400px;
+    background: #fafafa;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.spectrum-party {
+    position: absolute;
+    border-radius: 50%;
+    border: 2px solid #333;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 10px;
+    color: #fff;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.7);
+    cursor: grab;
+    transition: all 0.3s ease;
+    transform: translate(-50%, -50%);
+    z-index: 10;
+    user-select: none;
+}
+
+.spectrum-party:hover {
+    transform: translate(-50%, -50%) scale(1.1);
+    z-index: 100;
+    border-width: 3px;
+}
+
+.spectrum-party:active {
+    cursor: grabbing;
+    transform: translate(-50%, -50%) scale(1.1);
+}
+
+.spectrum-party.dragging {
+    cursor: grabbing;
+    z-index: 1000;
+    transform: translate(-50%, -50%) scale(1.1);
+    transition: none;
+}
+
+.spectrum-party.selected {
+    background-color: #4CAF50 !important;
+    border-color: #2E7D32;
+    box-shadow: 0 0 10px rgba(76, 175, 80, 0.5);
+}
+
+.axis-label {
+    font-size: 12px;
+    font-weight: bold;
+    fill: #666;
+}
+
+.quadrant-label {
+    font-size: 14px;
+    font-weight: bold;
+    fill: #999;
+    opacity: 0.7;
+}
+
+#spectrum-svg {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+}
+
+.coalition-line {
+    stroke: #FF6B35;
+    stroke-width: 1;
+    stroke-opacity: 0.8;
+    stroke-dasharray: 5,3;
+}
+
+/* Tooltip styles */
+.party-tooltip {
+    position: absolute;
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    pointer-events: none;
+    z-index: 1000;
+    transform: translate(-50%, 0);
+    white-space: nowrap;
+}
+
+/* Coalition stats styles */
+.stat-cell {
+    font-weight: bold;
+    text-align: center;
+    padding: 4px;
+    border-radius: 4px;
+}
+
+.economic-score {
+    /* Blue (left) to Red (right) gradient */
+    color: white;
+}
+
+.social-score {
+    /* Green (progressive) to Purple (conservative) gradient */
+    color: white;
+}
+
+.compatibility-score {
+    /* Red to Yellow to Green gradient */
+    color: black;
+}
+
+/* Party info panel */
+#party-info {
+    border-left: 4px solid #007bff;
+}
