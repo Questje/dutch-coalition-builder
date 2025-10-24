@@ -213,13 +213,25 @@ class Coalition:
         
         return round(max(0, final_compatibility), 1)
     
-    def contains_excluded_pair(self, parties: List[Party], exclusions: Set[Tuple[str, str]]) -> bool:
-        """Check if a coalition contains any excluded party pair."""
+    def contains_excluded_pair(self, parties: List[Party], exclusions: Set[Tuple[str, ...]]) -> bool:
+        """
+        Check if a coalition contains any excluded party pair or single excluded party.
+        
+        Exclusions can be:
+        - Single party tuple: (party_name,) - party cannot be in any coalition
+        - Two party tuple: (party1, party2) - these two parties cannot be together
+        """
         party_names = [p.name for p in parties]
         
         for exclusion in exclusions:
-            if exclusion[0] in party_names and exclusion[1] in party_names:
-                return True
+            if len(exclusion) == 1:
+                # Single party exclusion - party cannot be in any coalition
+                if exclusion[0] in party_names:
+                    return True
+            elif len(exclusion) == 2:
+                # Two party exclusion - both parties cannot be together
+                if exclusion[0] in party_names and exclusion[1] in party_names:
+                    return True
         
         return False
     
@@ -237,7 +249,7 @@ class Coalition:
         return False
     
     def generate_all_coalitions(self, 
-                               exclusions: Set[Tuple[str, str]] = None,
+                               exclusions: Set[Tuple[str, ...]] = None,
                                inclusions: Set[Tuple[str, str]] = None,
                                min_parties: int = 1,
                                max_parties: int = 6) -> List[Tuple[List[Party], int]]:

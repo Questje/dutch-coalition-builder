@@ -42,6 +42,11 @@ async function initialize() {
             document.getElementById('loading').style.display = 'none';
             document.getElementById('main-content').style.display = 'flex';
             
+            // Add poll dropdown
+            if (data.polls) {
+                populatePollDropdown(data.polls, data.current_poll);
+            }
+            
             // Initialize spectrum after the content is visible and has proper dimensions
             setTimeout(initializeSpectrum, 100);
         } else {
@@ -50,6 +55,43 @@ async function initialize() {
     } catch (error) {
         alert('Failed to initialize: ' + error.message);
     }
+}
+
+async function changePoll() {
+    const selectedPoll = document.getElementById('poll-dropdown').value;
+    if (!selectedPoll) return;
+    
+    try {
+        const response = await fetch('/api/change_poll', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ poll_name: selectedPoll })
+        });
+        
+        const data = await response.json();
+        if (data.success) {
+            parties = data.parties;
+            document.getElementById('total-seats').textContent = `Total seats: ${data.total_seats}`;
+            populatePartyTable();
+            populateDropdowns();
+            
+            // Recreate chart with new data
+            recreateChart();
+            
+            updateCoalitions();
+            updateSpectrum();
+        }
+    } catch (error) {
+        alert('Failed to change poll: ' + error.message);
+    }
+}
+
+function populatePollDropdown(polls, currentPoll) {
+    const dropdown = document.getElementById('poll-dropdown');
+    dropdown.innerHTML = polls.map(poll => 
+        `<option value="${poll}" ${poll === currentPoll ? 'selected' : ''}>${poll}</option>`
+    ).join('');
+    document.getElementById('poll-selector').style.display = 'block';
 }
 
 function populatePartyTable() {
@@ -77,7 +119,7 @@ function populateDropdowns() {
     const partyOptions = parties.filter(p => p.seats > 0).map(p => `<option value="${p.name}">${p.name}</option>`).join('');
     
     document.getElementById('exclude-party1').innerHTML = '<option value="">Select party</option>' + partyOptions;
-    document.getElementById('exclude-party2').innerHTML = '<option value="">Select party</option>' + partyOptions;
+    document.getElementById('exclude-party2').innerHTML = '<option value="">Select party (optional)</option>' + partyOptions;
     document.getElementById('include-party1').innerHTML = '<option value="">Select party</option>' + partyOptions;
     document.getElementById('include-party2').innerHTML = '<option value="">Select party</option>' + partyOptions;
 }
@@ -154,6 +196,16 @@ function initializeChart() {
             }
         }
     });
+}
+
+function recreateChart() {
+    // Destroy existing chart
+    if (chart) {
+        chart.destroy();
+    }
+    
+    // Create new chart with updated data
+    initializeChart();
 }
 
 function updateChart() {
@@ -657,17 +709,25 @@ function addExclusion() {
     const party1 = document.getElementById('exclude-party1').value;
     const party2 = document.getElementById('exclude-party2').value;
     
-    if (!party1 || !party2) {
-        alert('Please select two parties');
+    if (!party1) {
+        alert('Please select at least one party');
         return;
     }
     
-    if (party1 === party2) {
-        alert('Please select two different parties');
-        return;
+    // Allow single-party exclusions
+    let exclusion;
+    if (!party2) {
+        // Single party exclusion
+        exclusion = [party1];
+    } else {
+        // Two-party exclusion
+        if (party1 === party2) {
+            alert('Please select two different parties');
+            return;
+        }
+        exclusion = [party1, party2].sort();
     }
     
-    const exclusion = [party1, party2].sort();
     const exclusionStr = exclusion.join('-');
     
     if (exclusions.some(e => e.join('-') === exclusionStr)) {
@@ -725,12 +785,21 @@ function addInclusion() {
 
 function updateExclusionsDisplay() {
     const container = document.getElementById('exclusions-list');
-    container.innerHTML = exclusions.map((exc, index) => 
-        `<span class="exclusion-item">
-            ❌ ${exc[0]} ↔ ${exc[1]}
-            <span class="remove-btn" onclick="removeExclusion(${index})">×</span>
-        </span>`
-    ).join('');
+    container.innerHTML = exclusions.map((exc, index) => {
+        if (exc.length === 1) {
+            // Single party exclusion
+            return `<span class="exclusion-item">
+                🚫 ${exc[0]}
+                <span class="remove-btn" onclick="removeExclusion(${index})">×</span>
+            </span>`;
+        } else {
+            // Two party exclusion
+            return `<span class="exclusion-item">
+                ❌ ${exc[0]} ↔ ${exc[1]}
+                <span class="remove-btn" onclick="removeExclusion(${index})">×</span>
+            </span>`;
+        }
+    }).join('');
 }
 
 function updateInclusionsDisplay() {

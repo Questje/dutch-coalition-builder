@@ -5,8 +5,10 @@ from scrapers.polling import PollingScraper
 
 app = Flask(__name__)
 
-# Global variable to store coalition data
+# Global variables to store data
 coalition_data = None
+polls_data = {}  # Store all polls
+current_poll = None  # Currently selected poll
 
 @app.route('/')
 def index():
@@ -15,13 +17,26 @@ def index():
 
 @app.route('/api/initialize')
 def initialize():
-    """Initialize the application with polling data."""
-    global coalition_data
+    """Initialize the application with all polling data."""
+    global coalition_data, polls_data, current_poll
     
     try:
-        # Fetch polling data
+        # Fetch all polls
         scraper = PollingScraper()
-        parties = scraper.get_latest_polls()
+        polls_data = scraper.get_all_polls()
+        
+        if not polls_data:
+            return jsonify({'error': 'No polling data found'}), 500
+        
+        # Get poll names for dropdown
+        poll_names = list(polls_data.keys())
+        
+        # Add "Average of all polls" option
+        poll_options = ["Average of all polls"] + poll_names
+        
+        # Use first poll as default
+        current_poll = poll_names[0] if poll_names else None
+        parties = polls_data[current_poll] if current_poll else []
         
         if not parties:
             return jsonify({'error': 'No party data found'}), 500
@@ -40,7 +55,57 @@ def initialize():
         return jsonify({
             'success': True,
             'parties': party_list,
-            'total_seats': coalition_data.get_total_seats()
+            'total_seats': coalition_data.get_total_seats(),
+            'polls': poll_options,
+            'current_poll': current_poll
+        })
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/change_poll', methods=['POST'])
+def change_poll():
+    """Change the selected poll."""
+    global coalition_data, polls_data, current_poll
+    
+    data = request.json
+    selected_poll = data.get('poll_name')
+    
+    if not selected_poll:
+        return jsonify({'error': 'No poll selected'}), 400
+    
+    try:
+        # Get the appropriate poll data
+        if selected_poll == "Average of all polls":
+            scraper = PollingScraper()
+            scraper.polls_data = polls_data  # Use already loaded polls
+            parties = scraper.get_average_polls()
+            current_poll = selected_poll
+        elif selected_poll in polls_data:
+            parties = polls_data[selected_poll]
+            current_poll = selected_poll
+        else:
+            return jsonify({'error': 'Poll not found'}), 404
+        
+        if not parties:
+            return jsonify({'error': 'No party data found for selected poll'}), 500
+        
+        # Create new coalition model with selected poll data
+        coalition_data = Coalition(parties)
+        
+        # Return updated party data
+        party_list = [{
+            'name': p.name, 
+            'seats': p.seats,
+            'economic': p.economic,
+            'social': p.social
+        } for p in parties]
+        
+        return jsonify({
+            'success': True,
+            'parties': party_list,
+            'total_seats': coalition_data.get_total_seats(),
+            'current_poll': current_poll
         })
         
     except Exception as e:

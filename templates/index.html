@@ -12,6 +12,15 @@
     <div class="container-fluid">
         <h1 class="text-center my-3">Coalition Builder - Netherlands Elections</h1>
         
+        <!-- Add this after the h1 tag and before the loading div -->
+        <div class="row justify-content-center mb-3" id="poll-selector" style="display: none;">
+            <div class="col-md-4">
+                <select id="poll-dropdown" class="form-select" onchange="changePoll()">
+                    <option value="">Loading polls...</option>
+                </select>
+            </div>
+        </div>
+
         <div id="loading" class="text-center my-5">
             <div class="spinner-border" role="status">
                 <span class="visually-hidden">Loading...</span>
@@ -63,7 +72,7 @@
                         
                         <!-- Exclusions -->
                         <div class="mb-3">
-                            <h6>Exclusions (cannot work together)</h6>
+                            <h6>Exclusions (cannot be in coalition)</h6>
                             <div class="row mb-2">
                                 <div class="col-4">
                                     <select id="exclude-party1" class="form-select form-select-sm"></select>
